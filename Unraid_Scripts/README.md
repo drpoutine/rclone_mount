@@ -56,6 +56,20 @@ Easiest way is to use the CA User Scripts Plugin
 For scheduling, you can choose what to use, ive choosen at array start up. 
 If you would like the script to run every couple of hours and it'll run an insanity check
 
+# Stopping the array cleanly
+
+Unraid cannot stop the array while the mounts are still up. It keeps retrying `umount /mnt/user`, gets "target is busy", and once the shutdown time-out runs out it forces the shutdown. The next boot then reports "unclean shutdown detected".
+
+`rclone_unmount.sh` takes the mounts down when the array stops:
+
+1. In the User Scripts plugin, add a new script (for example `rclone_unmount`) and paste in `rclone_unmount.sh`.
+2. Set `MOUNT_SCRIPT` at the top to where your mount script lives. The default is the User Scripts location for a script named `rclone_mount`.
+3. Set its schedule to "At Stopping of Array" and click Apply. Use the plugin's page for this: it keeps a live copy of the schedule, so a script added by editing the files on the flash drive is not picked up until the next reboot.
+
+It calls the mount script's own `stop` action, then waits for rclone and mergerfs to exit and stops them if they linger. Each run is also written to `/boot/logs/rclone_unmount.log`, so you can check after a reboot that it ran.
+
+If shutdowns are still forced, raise the shutdown time-out (Settings > Disk Settings). Stopping many containers can use up most of the default 90 seconds before Unraid even gets to the unmount.
+
 # Issues?
 Make an issue describe the problem :) 
 
